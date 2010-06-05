@@ -9,4 +9,7 @@
  * 
  * @TODO add more configuration options: direction, css3 prog enhancement stuff
  * @TODO consider adding support for loading images from passed array instead of from DOM
+ *
+ *
+ * To use, just do something like this: $("img").slideshowify();
  */
