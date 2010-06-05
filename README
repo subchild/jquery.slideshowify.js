@@ -1,0 +1,12 @@
+/**
+ * Slideshowify is a jQuery plugin for generating a full-screen (well, browser dims) slideshow 
+ * from images that match a selector.  Images that don't fit the window proportions exactly (generally
+ * the case) are cropped and panned across the screen.
+ *
+ * version 0.5
+ * Should appear on subchild.com, github, and jQuery plugins page at some point soon.
+ * Will likely be used on Gallerama.com in some shape or form as well.
+ * 
+ * @TODO add more configuration options: direction, css3 prog enhancement stuff
+ * @TODO consider adding support for loading images from passed array instead of from DOM
+ */
