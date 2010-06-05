@@ -8,6 +8,7 @@
  * Will likely be used on Gallerama.com in some shape or form as well.
  * 
  * @TODO add more configuration options: direction, css3 prog enhancement stuff
+ * @TODO fix the resizing business (force full screen and prevent resizing || add resize handler to adjust numbers)
  * @TODO consider adding support for loading images from passed array instead of from DOM
  *
  *
