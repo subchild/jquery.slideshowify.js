@@ -1,10 +1,11 @@
 /**
- * Slideshowify is a jQuery plugin for generating a full-screen (well, browser dims) slideshow 
- * from images that match a selector.  Images that don't fit the window proportions exactly (generally
- * the case) are cropped and panned across the screen.
+ * Slideshowify is a jQuery plugin for generating a "Ken Burns Effect"-style slideshow from images 
+ * that match a selector.  Images that don't fit the window proportions exactly (generally
+ * the case) are cropped and panned across the screen. This also resembles that Mac screensaver.
  *
- * version 0.5
- * Should appear on subchild.com, github, and jQuery plugins page at some point soon.
+ * Version 0.6
+ * 
+ * Should appear on subchild.com, and the jQuery plugins page at some point soon.
  * Will likely be used on Gallerama.com in some shape or form as well.
  * 
  * @TODO add more configuration options: direction, css3 prog enhancement stuff
@@ -13,4 +14,5 @@
  *
  *
  * To use, just do something like this: $("img").slideshowify();
+ *
  */
