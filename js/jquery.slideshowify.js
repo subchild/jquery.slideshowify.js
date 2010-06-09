@@ -3,12 +3,14 @@
  * from images that match a selector.  Images that don't fit the window proportions exactly (generally
  * the case) are cropped and panned across the screen.
  *
- * version 0.5
+ * Author: Aleksandar Kolundzija 
+ * version 0.8
+ *
  * Should appear on subchild.com, github, and jQuery plugins page at some point soon.
  * Will likely be used on Gallerama.com in some shape or form as well.
  * 
  * @TODO add more configuration options: direction, css3 prog enhancement stuff
- * @TODO consider adding support for loading images from passed array instead of from DOM
+ * @TODO consider adding option to pass image data directly to $.slideshowify()
  */
 
 (function($){
@@ -20,16 +22,17 @@
 				_imgIndexNext = 0, // for preloading next			
 				_fadeTimeoutId,
 				_cfg = {
-					containerId  : "slideshowify_bg",
+					containerId  : "slideshowify-bg",
+					containerCss : {"position":"absolute", "overflow":"hidden", "z-index":"-2", "left":"0", "top":"0", "width":"100%", "height":"100%"},
 					transition   : "into", // or "into"
 					fadeInSpeed  : 2000,
 					fadeOutSpeed : 2000,
 					aniSpeedMin  : 3000, // min animate speed
-					aniSpeedMax  : 8000 // max animate speed
+					aniSpeedMax  : 8000  // max animate speed
 				};
 			
 		if (arguments[0]){
-			$.extend(_cfg, arguments[0]); // reconfigure
+			$.extend(_cfg, arguments[0]); // (re)configure
 		}
 			
 		/**
@@ -37,13 +40,14 @@
 		 * @TODO Use 100% dims for non-IE browsers (do detection), OR instead add a resize handler, OR
 		 * make screen full size and prevent resizing.
 		 */
-		function _adjustImgDims(curImg){
+		function _adjustImgDimsAndRender(curImg){
 			var $doc     = $(document),
 					$img     = $(this),
 					docW     = $doc.width(),
 					docH     = $doc.height(),
 					docRatio = docW/docH,
-					imgRatio = $img.width()/$img.height();
+					imgRatio = $img.width()/$img.height(),
+					aniSpeed = _cfg.aniSpeedMin;
 			if (imgRatio > docRatio){
 	//				$img.height("100%");
 				$img.height(docH+"px").width(curImg.w*(docH/curImg.h)+"px");				
@@ -56,43 +60,34 @@
 				marginPixels = $img.height()-docH;
 				marginAttr   = {"margin-top":"-"+marginPixels+"px"};
 			}
-			$img.fadeIn(_cfg.fadeInSpeed, function(){
-				$(this).css("z-index", -1);
-			});
-			_panOrWait.call(this, marginPixels, marginAttr);
-		}	
-	
-	
-		/**
-		 * Animates (pans over) image (if not entirely displayed), then loads/shows next image
-		 */
-		function _panOrWait(marginPixels, marginAttr){
-			var img      = this,
-					aniSpeed = _cfg.aniSpeedMin;
-			if (Math.abs(marginPixels) > 0){ // pan...
-				aniSpeed = Math.min(Math.max(marginPixels * 50, _cfg.aniSpeedMin), _cfg.aniSpeedMax);
-				$(img).animate(marginAttr, aniSpeed, function(){
-					_showNext.call(img);
+			aniSpeed = Math.min(Math.max(marginPixels * 50, _cfg.aniSpeedMin), _cfg.aniSpeedMax);
+			$img
+				.fadeIn(_cfg.fadeInSpeed, function(){
+					$img.css("z-index", -1);
+				})
+				.animate(marginAttr, {
+					duration : aniSpeed,
+					queue    : false,
+					complete : function(){ 
+						// _advance.call(this);
+						$(this).fadeOut(_cfg.fadeOutSpeed, function(){
+							$(this).remove();
+						});
+						_showImg();
+					}
 				});
-			}
-			else { // or wait...
-				_fadeTimeoutId = setTimeout(function(){
-					clearTimeout(_fadeTimeoutId);
-					_showNext.call(img);
-				}, (_cfg.aniSpeedMin + _cfg.aniSpeedMax)/2);
-			}
-		}
-	
+		}	
+
 	
 		/**
 		 * Fades out current image and calls starts display of next one
 		 */
-		function _showNext(){
-			$(this).fadeOut(_cfg.fadeOutSpeed, function(){
-				$(this).remove();
-			});
-			_showImg();
-		}	
+//		function _advance(){
+//			$(this).fadeOut(_cfg.fadeOutSpeed, function(){
+//				$(this).remove();
+//			});
+//			_showImg();
+//		}	
 	
 		
 		/**
@@ -117,7 +112,7 @@
 					else {
 						$("#"+_cfg.containerId).empty().append(this);
 					}
-					_adjustImgDims.call(this, _imgs[_imgIndex]);
+					_adjustImgDimsAndRender.call(this, _imgs[_imgIndex]);
 				})
 				.error(function(){
 					alert("Oops, can't load the image.");
@@ -133,32 +128,63 @@
 		}
 		
 
-
-		// load images into private array
-		$(this).each(function(i, img){
-			$(img).hide();
-			_imgs.push({
-				src : $(img).attr("src"),
-				w   : $(img).width(),
-				h   : $(img).height()
+		if (!_cfg.imgs){ // if images weren't passed as array, load from object
+			// load images into private array
+			$(this).each(function(i, img){
+				$(img).hide();
+				_imgs.push({
+					src : $(img).attr("src"),
+					w   : $(img).width(),
+					h   : $(img).height()
+				});
 			});
-		});
+		}
+		else {
+			_imgs = _cfg.imgs;
+		}
 	
 		// create container div 
-		$("<div id='"+_cfg.containerId+"'></div>")
-			.css({
-					 	"position" : "absolute",
-						"top"      : "0",
-						"left"     : "0",
-						"z-index"  : "-2",
-						"width"    : "100%",
-						"height"   : "100%",
-						"overflow" : "hidden"
-					})
-			.appendTo("body");
+		$("<div id='"+_cfg.containerId+"'></div>").css(_cfg.containerCss).appendTo("body");
 	
 		// start
 		_showImg();
-
+		
+		return this;
 	};
+		
 }(jQuery));
+
+
+
+/**
+ * Make slideshowify accessible as a function that can be passed a data URL
+ */ 
+$.slideshowify = function(cfg){
+	
+	var _self = this,
+			_cfg  = {
+				randomize : false,
+				dataUrl   : "",
+				dataType  : "json",
+				async     : true,
+				filterFn  : function(data){ return data; } // default filter. does nothing
+			};
+			
+	$.extend(_cfg, cfg);
+	
+	$.ajax({
+		url      : _cfg.dataUrl,
+		dataType : _cfg.dataType,
+		async    : _cfg.async,
+		success  : function(imgs){
+			_cfg.imgs = _cfg.filterFn(imgs);			
+			if (_cfg.randomize){ 
+				_cfg.imgs.sort(function(){
+					return 0.5 - Math.random();
+				});
+			}
+			$({}).slideshowify(_cfg);
+		}
+	});
+	
+};
