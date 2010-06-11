@@ -22,23 +22,32 @@
 				_imgIndexNext = 0, // for preloading next			
 				_fadeTimeoutId,
 				_cfg = {
-					containerId  : "slideshowify-bg",
-					containerCss : {"position":"absolute", "overflow":"hidden", "z-index":"-2", "left":"0", "top":"0", "width":"100%", "height":"100%"},
-					transition   : "into", // or "into"
-					fadeInSpeed  : 2000,
-					fadeOutSpeed : 2000,
-					aniSpeedMin  : 3000, // min animate speed
-					aniSpeedMax  : 8000  // max animate speed
+					containerId   : "slideshowify-bg",
+					containerCss  : {
+						"position" : "absolute",
+						"overflow" : "hidden",
+						"z-index"  : "-2",
+						"left"     : "0",
+						"top"      : "0",
+						"width"    : "100%",
+						"height"   : "100%"
+					},
+					transition    : "into", // "into" || "toBg"
+					fadeInSpeed   : 2000,
+					fadeOutSpeed  : 2000,
+					aniSpeedMin   : 3000, // min animate speed
+					aniSpeedMax   : 8000,  // max animate speed
+					afterFadeIn   : function(){},
+					beforeFadeOut : function(){}
 				};
 			
 		if (arguments[0]){
-			$.extend(_cfg, arguments[0]); // (re)configure
+			$.extend(_cfg, arguments[0]); // reconfigure
 		}
 			
 		/**
 		 * Fills screen with image (most likely cropped based on its dimensions and window size).
-		 * @TODO Use 100% dims for non-IE browsers (do detection), OR instead add a resize handler, OR
-		 * make screen full size and prevent resizing.
+		 * @TODO Add a resize handler to adjust photo dimensions and margins
 		 */
 		function _adjustImgDimsAndRender(curImg){
 			var $doc     = $(document),
@@ -49,13 +58,11 @@
 					imgRatio = $img.width()/$img.height(),
 					aniSpeed = _cfg.aniSpeedMin;
 			if (imgRatio > docRatio){
-	//				$img.height("100%");
 				$img.height(docH+"px").width(curImg.w*(docH/curImg.h)+"px");				
 				marginPixels = $img.width()-docW;
 				marginAttr   = {"margin-left":"-"+marginPixels+"px"};
 			}
 			else {
-	//				$img.width("100%");
 				$img.width(docW+"px").height(curImg.h*(docW/curImg.w)+"px");				
 				marginPixels = $img.height()-docH;
 				marginAttr   = {"margin-top":"-"+marginPixels+"px"};
@@ -64,12 +71,14 @@
 			$img
 				.fadeIn(_cfg.fadeInSpeed, function(){
 					$img.css("z-index", -1);
+					_cfg.afterFadeIn();
 				})
 				.animate(marginAttr, {
 					duration : aniSpeed,
 					queue    : false,
 					complete : function(){ 
 						// _advance.call(this);
+						_cfg.beforeFadeOut();
 						$(this).fadeOut(_cfg.fadeOutSpeed, function(){
 							$(this).remove();
 						});
@@ -144,7 +153,9 @@
 		}
 	
 		// create container div 
-		$("<div id='"+_cfg.containerId+"'></div>").css(_cfg.containerCss).appendTo("body");
+		$("<div id='"+_cfg.containerId+"'></div>")
+			.css(_cfg.containerCss)
+			.appendTo("body");
 	
 		// start
 		_showImg();
@@ -158,6 +169,7 @@
 
 /**
  * Make slideshowify accessible as a function that can be passed a data URL
+ * @TODO add support for image array as a parameter (no need for ajax)
  */ 
 $.slideshowify = function(cfg){
 	
