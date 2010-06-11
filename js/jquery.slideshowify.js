@@ -5,9 +5,6 @@
  *
  * Author: Aleksandar Kolundzija 
  * version 0.8
- *
- * Should appear on subchild.com, github, and jQuery plugins page at some point soon.
- * Will likely be used on Gallerama.com in some shape or form as well.
  * 
  * @TODO add more configuration options: direction, css3 prog enhancement stuff
  * @TODO consider adding option to pass image data directly to $.slideshowify()
