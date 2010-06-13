@@ -2,22 +2,24 @@ Slideshowify is a jQuery plugin for generating a "Ken Burns Effect"-style slides
 that match a selector.  Images that don't fit the window proportions exactly (generally
 the case) are cropped and panned across the screen. This also resembles that Mac screensaver.
 
+Check out the DEMO: www.subchild.com/slideshowify
+
 @TODO add more configuration options: direction, css3 prog enhancement stuff
 @TODO fix the resizing business (force full screen and prevent resizing || add resize handler to adjust numbers)
 
 To use, do something like this:
 
-	$("img").slideshowify()
+	$("img").slideshowify();
 
 or:
 	
 	$.slideshowify({
-		dataUrl     : "http://www.gallerama.com/services/gallery/get.php?gid=2107&versions[]=9", //"js/data.js",
+		dataUrl     : "http://www.gallerama.com/services/gallery/get.php?gid=2107&versions[]=9",
 		dataType    : "jsonp",
 		randomize   : true,
 		aniSpeedMin : 6000,
-		aniSpeedMax : 1000,
-		filterFn    : function(imgs){
+		aniSpeedMax : 10000,
+		filterFn    : function(imgs){ // filter data
 			var fixedImgs = [];
 			$.each(imgs, function(i, img){
 				fixedImgs.push($.extend(img.versions["9"], {id:img.id}));
