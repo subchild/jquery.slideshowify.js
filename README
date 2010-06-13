@@ -1,18 +1,33 @@
-/**
- * Slideshowify is a jQuery plugin for generating a "Ken Burns Effect"-style slideshow from images 
- * that match a selector.  Images that don't fit the window proportions exactly (generally
- * the case) are cropped and panned across the screen. This also resembles that Mac screensaver.
- *
- * Version 0.6
- * 
- * Should appear on subchild.com, and the jQuery plugins page at some point soon.
- * Will likely be used on Gallerama.com in some shape or form as well.
- * 
- * @TODO add more configuration options: direction, css3 prog enhancement stuff
- * @TODO fix the resizing business (force full screen and prevent resizing || add resize handler to adjust numbers)
- * @TODO consider adding support for loading images from passed array instead of from DOM
- *
- *
- * To use, just do something like this: $("img").slideshowify();
- *
- */
+Slideshowify is a jQuery plugin for generating a "Ken Burns Effect"-style slideshow from images 
+that match a selector.  Images that don't fit the window proportions exactly (generally
+the case) are cropped and panned across the screen. This also resembles that Mac screensaver.
+
+@TODO add more configuration options: direction, css3 prog enhancement stuff
+@TODO fix the resizing business (force full screen and prevent resizing || add resize handler to adjust numbers)
+
+To use, do something like this:
+
+	$("img").slideshowify()
+
+or:
+	
+	$.slideshowify({
+		dataUrl     : "http://www.gallerama.com/services/gallery/get.php?gid=2107&versions[]=9", //"js/data.js",
+		dataType    : "jsonp",
+		randomize   : true,
+		aniSpeedMin : 6000,
+		aniSpeedMax : 1000,
+		filterFn    : function(imgs){
+			var fixedImgs = [];
+			$.each(imgs, function(i, img){
+				fixedImgs.push($.extend(img.versions["9"], {id:img.id}));
+			});
+			return fixedImgs;
+		},
+		afterFadeIn : function(curImage){
+			// do something
+		},
+		beforeFadeOut : function(curImage){
+			// do something else
+		}
+	});
