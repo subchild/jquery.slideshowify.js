@@ -5,6 +5,9 @@
  *
  * Author: Aleksandar Kolundzija 
  * version 0.8
+ *
+ * Should appear on subchild.com, github, and jQuery plugins page at some point soon.
+ * Will likely be used on Gallerama.com in some shape or form as well.
  * 
  * @TODO add more configuration options: direction, css3 prog enhancement stuff
  * @TODO consider adding option to pass image data directly to $.slideshowify()
@@ -32,7 +35,7 @@
 					transition    : "into", // "into" || "toBg"
 					fadeInSpeed   : 2000,
 					fadeOutSpeed  : 2000,
-					aniSpeedMin   : 3000, // min animate speed
+					aniSpeedMin   : 5000,  // min animate speed
 					aniSpeedMax   : 8000,  // max animate speed
 					afterFadeIn   : function(){},
 					beforeFadeOut : function(){}
@@ -68,14 +71,14 @@
 			$img
 				.fadeIn(_cfg.fadeInSpeed, function(){
 					$img.css("z-index", -1);
-					_cfg.afterFadeIn();
+					_cfg.afterFadeIn(_imgs[_imgIndex]);
 				})
 				.animate(marginAttr, {
 					duration : aniSpeed,
 					queue    : false,
 					complete : function(){ 
 						// _advance.call(this);
-						_cfg.beforeFadeOut();
+						_cfg.beforeFadeOut(_imgs[_imgIndex]);
 						$(this).fadeOut(_cfg.fadeOutSpeed, function(){
 							$(this).remove();
 						});
