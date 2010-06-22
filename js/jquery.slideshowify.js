@@ -21,8 +21,10 @@
 				_imgIndex     = -1,	
 				_imgIndexNext = 0, // for preloading next			
 				_fadeTimeoutId,
-				_cfg = {
-					containerId   : "slideshowify-bg",
+				_xDir = -1, // horizontal direction multiplier (1 or -1)
+				_yDir = -1, // vertical direction multiplier (1 or -1)			
+				_cfg  = {
+					containerId   : "slideshowify-bg", // id of slideshowify div created by the plugin
 					containerCss  : {
 						"position" : "absolute",
 						"overflow" : "hidden",
@@ -33,9 +35,10 @@
 						"height"   : "100%"
 					},
 					transition    : "into", // "into" || "toBg"
+					direction     : "alternate", // "default || "alternate"
 					fadeInSpeed   : 2000,
 					fadeOutSpeed  : 2000,
-					aniSpeedMin   : 5000,  // min animate speed
+					aniSpeedMin   : 6000,  // min animate speed
 					aniSpeedMax   : 8000,  // max animate speed
 					afterFadeIn   : function(){},
 					beforeFadeOut : function(){}
@@ -49,7 +52,7 @@
 		 * Fills screen with image (most likely cropped based on its dimensions and window size).
 		 * @TODO Add a resize handler to adjust photo dimensions and margins
 		 */
-		function _adjustImgDimsAndRender(curImg){
+		function _revealImg(curImg){
 			var $doc     = $(document),
 					$img     = $(this),
 					docW     = $doc.width(),
@@ -59,13 +62,31 @@
 					aniSpeed = _cfg.aniSpeedMin;
 			if (imgRatio > docRatio){
 				$img.height(docH+"px").width(curImg.w*(docH/curImg.h)+"px");				
-				marginPixels = $img.width()-docW;
-				marginAttr   = {"margin-left":"-"+marginPixels+"px"};
+				marginPixels = ($img.width() - docW) * _xDir;
+				if (_xDir===1){
+					$img.css({"margin-left":marginPixels*-1+"px"}); // move image before slide if sliding to right
+					marginAttr = {"margin-left":"0px"}; // will be sliding to zero
+				}
+				else {
+					marginAttr = {"margin-left":marginPixels+"px"};
+				}
+				if (_cfg.direction==="alternate"){
+					_xDir *= -1; // switch
+				}
 			}
 			else {
 				$img.width(docW+"px").height(curImg.h*(docW/curImg.w)+"px");				
-				marginPixels = $img.height()-docH;
-				marginAttr   = {"margin-top":"-"+marginPixels+"px"};
+				marginPixels = ($img.height() - docH) * _yDir;
+				if (_yDir===1){
+					$img.css({"margin-top":marginPixels*-1+"px"}); // move image before slide if sliding down
+					marginAttr = {"margin-top":"0px"}; // will be sliding to zero
+				}
+				else {
+					marginAttr = {"margin-top":marginPixels+"px"};
+				}
+				if (_cfg.direction==="alternate"){
+					_yDir *= -1; // switch
+				}
 			}
 			aniSpeed = Math.min(Math.max(marginPixels * 50, _cfg.aniSpeedMin), _cfg.aniSpeedMax);
 			$img
@@ -82,7 +103,7 @@
 						$(this).fadeOut(_cfg.fadeOutSpeed, function(){
 							$(this).remove();
 						});
-						_showImg();
+						_loadImg();
 					}
 				});
 		}	
@@ -95,7 +116,7 @@
 //			$(this).fadeOut(_cfg.fadeOutSpeed, function(){
 //				$(this).remove();
 //			});
-//			_showImg();
+//			_loadImg();
 //		}	
 	
 		
@@ -103,7 +124,7 @@
 		 * Loads image and starts display flow
 		 * @TODO fix preloading stuff; only preload images once (don't loop)
 		 */
-		function _showImg(){
+		function _loadImg(){
 			var img     = new Image(),
 					nextImg = new Image(), // for preloading
 					len     = _imgs.length;
@@ -121,13 +142,13 @@
 					else {
 						$("#"+_cfg.containerId).empty().append(this);
 					}
-					_adjustImgDimsAndRender.call(this, _imgs[_imgIndex]);
+					_revealImg.call(this, _imgs[_imgIndex]);
 				})
 				.error(function(){
-					alert("Oops, can't load the image.");
+					throw new Error("Oops, can't load the image.");
 				})
 				.hide()
-				.attr("src", _imgs[_imgIndex].src); // load/show image
+				.attr("src", _imgs[_imgIndex].src); // load
 			
 			// preload next image
 			_imgIndexNext = _imgIndex + 1;
@@ -158,7 +179,7 @@
 			.appendTo("body");
 	
 		// start
-		_showImg();
+		_loadImg();
 		
 		return this;
 	};
