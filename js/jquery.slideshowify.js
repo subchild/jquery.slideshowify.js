@@ -11,6 +11,8 @@
  * 
  * @TODO add more configuration options: direction, css3 prog enhancement stuff
  * @TODO consider adding option to pass image data directly to $.slideshowify()
+ * @TODO add zooming
+ * @TODO use css3 animation if available
  */
 
 (function($){
