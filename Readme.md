@@ -6,7 +6,7 @@ the case) are cropped and panned across the screen. This also resembles that Mac
 
 	Check out the DEMO: www.subchild.com/slideshowify
 
-@TODO add more configuration options: direction, css3 prog enhancement stuff
+@TODO add more configuration options: direction, css3 prog enhancement stuff  
 @TODO fix the resizing business (force full screen and prevent resizing || add resize handler to adjust numbers)
 
 To use, do something like this:
