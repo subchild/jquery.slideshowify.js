@@ -1,10 +1,10 @@
 # Slideshowify 
 
-jQuery.slideshowify.js is a jQuery plugin for generating a "Ken Burns Effect"-style slideshow from 
-images that match a selector.  Images that don't fit the window proportions exactly (generally
-the case) are cropped and panned across the screen. This also resembles that Mac screensaver.
+jQuery.slideshowify.js is a jQuery plugin for generating a slideshow with a [Ken Burns Effect](http://en.wikipedia.org/wiki/Ken_Burns_effect) from 
+images that match a selector.  Images that don't fit the window proportions exactly (generally the case) are cropped and panned across the screen. 
+This also resembles that Mac screensaver.
 
-	[Check out the DEMO](http://www.subchild.com/slideshowify)
+[Check out the DEMO](http://www.subchild.com/slideshowify)
 
 @TODO add more configuration options: direction, css3 prog enhancement stuff  
 @TODO fix the resizing business (force full screen and prevent resizing || add resize handler to adjust numbers)
