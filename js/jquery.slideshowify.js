@@ -1,50 +1,52 @@
 /**
- * Slideshowify is a jQuery plugin for generating a full-screen (well, browser dims) slideshow 
- * from images that match a selector. Images that don't fit the window proportions exactly (generally
- * the case) are cropped and panned across the screen.
+ * Slideshowify is a jQuery plugin for generating (window) edge-to-edge slideshows
+ * from passed images, which could be passed selector, or json from an api endpoint. 
+ * Images that don't fit the window proportions exactly (usually the case) are cropped 
+ * and panned across the screen. Images which fit the screen exactly, are displayed fully
+ * then slightly zoomed.
  *
  * Author: Aleksandar Kolundzija 
- * version 0.8
+ * version 0.9
  *
  * Should appear on subchild.com, github, and jQuery plugins page at some point soon.
  * Will likely be used on Gallerama.com in some shape or form as well.
  * 
- * @TODO add more configuration options: direction, css3 prog enhancement stuff
- * @TODO consider adding option to pass image data directly to $.slideshowify()
- * @TODO add zooming
- * @TODO use css3 animation if available
+ * @requires jquery
+ * @requires jquery.transit (http://ricostacruz.com/jquery.transit/) as of v. 0.9
+ *
+ * @TODO Consider adding option to pass image data directly to $.slideshowify()
+ * @TODO Add header/subheader display, along with controls for pause and close. (likely on hover)
+ * @TODO Add unit tests
  */
 
 (function($){
 	$.fn.slideshowify = function(/* config */){
 	
 		var _self         = this,
-				_imgs         = [],
-				_imgIndex     = -1,	
-				_imgIndexNext = 0, // for preloading next			
-				_fadeTimeoutId,
-				_xDir = -1, // horizontal direction multiplier (1 or -1)
-				_yDir = -1, // vertical direction multiplier (1 or -1)			
-				_cfg  = {
-					containerId   : "slideshowify-bg", // id of slideshowify div created by the plugin
-					containerCss  : {
-						"position" : "absolute",
-						"overflow" : "hidden",
-						"z-index"  : "-2",
-						"left"     : "0",
-						"top"      : "0",
-						"width"    : "100%",
-						"height"   : "100%"
-					},
-					transition    : "into", // "into" || "toBg"
-					direction     : "alternate", // "default || "alternate"
-					fadeInSpeed   : 2000,
-					fadeOutSpeed  : 2000,
-					aniSpeedMin   : 6000,  // min animate speed
-					aniSpeedMax   : 8000,  // max animate speed
-					afterFadeIn   : function(){},
-					beforeFadeOut : function(){}
-				};
+			_imgs         = [],
+			_imgIndex     = -1,	
+			_imgIndexNext = 0, // for preloading next			
+			_transition   = true,
+			_easing = 'in-out',
+			_cfg  = {
+				containerId   : "slideshowify-bg", // id of slideshowify div created by the plugin
+				containerCss  : {
+					"position" : "absolute",
+					"overflow" : "hidden",
+					"z-index"  : "-2",
+					"left"     : "0",
+					"top"      : "0",
+					"width"    : "100%",
+					"height"   : "100%"
+				},
+				blend         : "into", // "into" || "toBg"
+				fadeInSpeed   : 1500,
+				fadeOutSpeed  : 1500,
+				aniSpeedMin   : 9000, 
+				aniSpeedMax   : 15000,
+				afterFadeIn   : function(){},
+				beforeFadeOut : function(){}
+			};
 			
 		if (arguments[0]){
 			$.extend(_cfg, arguments[0]); // reconfigure
@@ -55,72 +57,64 @@
 		 * @TODO Add a resize handler to adjust photo dimensions and margins
 		 */
 		function _revealImg(curImg){
-			var $doc     = $(document),
-					$img     = $(this),
-					docW     = $doc.width(),
-					docH     = $doc.height(),
-					docRatio = docW/docH,
-					imgRatio = $img.width()/$img.height(),
-					aniSpeed = _cfg.aniSpeedMin;
+			var $doc      = $(document),
+				$img      = $(this),
+				docW      = $doc.width(),
+				docH      = $doc.height(),
+				docRatio  = docW/docH,
+				imgRatio  = $img.width()/$img.height(),
+				transAttr = {},
+				direction = Math.round(Math.random());
+
 			if (imgRatio > docRatio){
-				$img.height(docH+"px").width(curImg.w*(docH/curImg.h)+"px");				
-				marginPixels = ($img.width() - docW) * _xDir;
-				if (_xDir===1){
-					$img.css({"margin-left":marginPixels*-1+"px"}); // move image before slide if sliding to right
-					marginAttr = {"margin-left":"0px"}; // will be sliding to zero
+				$img.height(docH + 'px').width(curImg.w * (docH/curImg.h) + 'px');				
+				marginPixels = ($img.width() - docW);
+				if (direction){
+					$img.css({'left':'-' + marginPixels + 'px'}); // move image before slide if sliding to right
 				}
-				else {
-					marginAttr = {"margin-left":marginPixels+"px"};
-				}
-				if (_cfg.direction==="alternate"){
-					_xDir *= -1; // switch
-				}
+				transAttr = {'x': (direction ? '' : '-') + marginPixels + 'px'}; 
 			}
 			else {
-				$img.width(docW+"px").height(curImg.h*(docW/curImg.w)+"px");				
-				marginPixels = ($img.height() - docH) * _yDir;
-				if (_yDir===1){
-					$img.css({"margin-top":marginPixels*-1+"px"}); // move image before slide if sliding down
-					marginAttr = {"margin-top":"0px"}; // will be sliding to zero
+				$img.width(docW+'px').height(curImg.h * (docW/curImg.w) + 'px');				
+				marginPixels = ($img.height() - docH);
+				if (direction){
+					$img.css({'top':'-' + marginPixels + 'px'}); // move image before slide if sliding down
+				}
+				transAttr = {'y' : (direction ? '' : '-') + marginPixels + 'px'}; // will be sliding to zero
+			}
+
+			// if margin is too small, zoom in a little instead of panning
+			// @TODO consider using percentage instead of pixel value (100)
+			if (_transition && marginPixels < 100){
+				if (direction){
+					$img.css('scale','1.2');
+					transAttr = {'scale':'1'};
 				}
 				else {
-					marginAttr = {"margin-top":marginPixels+"px"};
-				}
-				if (_cfg.direction==="alternate"){
-					_yDir *= -1; // switch
+					transAttr = {'scale':'1.2'};
 				}
 			}
-			aniSpeed = Math.min(Math.max(marginPixels * 50, _cfg.aniSpeedMin), _cfg.aniSpeedMax);
+
+			$.extend(transAttr, {
+				duration : Math.min(Math.max(marginPixels * 10, _cfg.aniSpeedMin), _cfg.aniSpeedMax),
+				easing   : _easing,
+				queue    : false
+			});
+
 			$img
 				.fadeIn(_cfg.fadeInSpeed, function(){
-					$img.css("z-index", -1);
+					$img.css('z-index', -1);
 					_cfg.afterFadeIn(_imgs[_imgIndex]);
 				})
-				.animate(marginAttr, {
-					duration : aniSpeed,
-					queue    : false,
-					complete : function(){ 
-						// _advance.call(this);
-						_cfg.beforeFadeOut(_imgs[_imgIndex]);
-						$(this).fadeOut(_cfg.fadeOutSpeed, function(){
-							$(this).remove();
-						});
-						_loadImg();
-					}
-				});
+				.transition(transAttr, function(){
+					_cfg.beforeFadeOut(_imgs[_imgIndex]);
+					$(this).fadeOut(_cfg.fadeOutSpeed, function(){
+						$(this).remove();
+					});
+					_loadImg();
+				}); 
 		}	// end of _revealImg()
 
-	
-		/**
-		 * Fades out current image and calls starts display of next one
-		 */
-//		function _advance(){
-//			$(this).fadeOut(_cfg.fadeOutSpeed, function(){
-//				$(this).remove();
-//			});
-//			_loadImg();
-//		}	
-	
 		
 		/**
 		 * Loads image and starts display flow
@@ -128,16 +122,15 @@
 		 */
 		function _loadImg(){
 			var img     = new Image(),
-					nextImg = new Image(), // for preloading
-					len     = _imgs.length;
-				
+				nextImg = new Image(), // for preloading
+				len     = _imgs.length;
+
 			_imgIndex = (_imgIndex < len-1) ? _imgIndex+1 : 0;
-			clearTimeout(_fadeTimeoutId); // @TODO need to be able to clear this timeout externally
 		
 			$(img)
 				// assign handlers
 				.load(function(){
-					if (_cfg.transition==="into"){
+					if (_cfg.blend==="into"){
 						$(this).css({"position":"absolute", "z-index":"-2"});
 						$("#"+_cfg.containerId).append(this);
 					}
@@ -160,8 +153,14 @@
 		} // end of _loadImg()
 		
 
+		// INITIALIZE
+		if (!$.support.transition) {
+        	$.fn.transition = $.fn.animate; // don't use css3 animations if not supported
+        	_transition = false;
+        	_easing = 'swing';
+      	}
 
-		if (!_cfg.imgs){ // if images weren't passed as array, load from object
+    	if (!_cfg.imgs){ // if images weren't passed as array, load from object
 			// load images into private array
 			$(this).each(function(i, img){
 				$(img).hide();
@@ -198,16 +197,16 @@
 $.slideshowify = function(cfg){
 	
 	var _self = this,
-			_cfg  = {
-				randomize : false,
-				dataUrl   : "",
-				dataType  : "json",
-				async     : true,
-				filterFn  : function(data){ return data; } // default filter. does nothing
-			};
+		_cfg  = {
+			randomize : false,
+			dataUrl   : "",
+			dataType  : "json",
+			async     : true,
+			filterFn  : function(data){ return data; } // default filter. does nothing
+		};
 			
 	$.extend(_cfg, cfg);
-	
+
 	$.ajax({
 		url      : _cfg.dataUrl,
 		dataType : _cfg.dataType,
