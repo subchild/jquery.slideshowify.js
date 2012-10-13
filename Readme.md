@@ -7,7 +7,7 @@ This also resembles that Mac screensaver.
 [Check out the DEMO](http://www.subchild.com/slideshowify)
 
 As of version 0.9, jQuery.slideshowify supports hardware-accelerated CSS3 transforms, which include panning in all directions as well as zooming 
-in and out (when the image aspect ratio matches that of the window). CSS3 support is provided by the excellent [jQuery.transit](http://http://ricostacruz.com/jquery.transit/) 
+in and out (when the image aspect ratio matches that of the window). CSS3 support is provided by the excellent [jQuery.transit](http://ricostacruz.com/jquery.transit/) 
 plugin from Rico Sta. Cruz.
 
 
