@@ -27,8 +27,8 @@
 			_imgIndex     = -1,	
 			_imgIndexNext = 0, // for preloading next			
 			_transition   = true,
-			_easing = 'in-out',
-			_cfg  = {
+			_easing       = 'in-out',
+			_cfg = {
 				containerId   : "slideshowify-bg", // id of slideshowify div created by the plugin
 				containerCss  : {
 					"position" : "absolute",
@@ -54,65 +54,75 @@
 			
 		/**
 		 * Fills screen with image (most likely cropped based on its dimensions and window size).
-		 * @TODO Add a resize handler to adjust photo dimensions and margins
+		 * @TODO Add a window resize handler (adjust photo dims/margins)
 		 */
 		function _revealImg(curImg){
 			var $doc      = $(document),
 				$img      = $(this),
 				docW      = $doc.width(),
 				docH      = $doc.height(),
+				direction = Math.round(Math.random()),
 				docRatio  = docW/docH,
 				imgRatio  = $img.width()/$img.height(),
 				transAttr = {},
-				direction = Math.round(Math.random());
+				transProps,
+				marginPixels,
+				modDims;  // will hold values to set/animate
 
 			if (imgRatio > docRatio){
-				$img.height(docH + 'px').width(curImg.w * (docH/curImg.h) + 'px');				
-				marginPixels = ($img.width() - docW);
-				if (direction){
-					$img.css({'left':'-' + marginPixels + 'px'}); // move image before slide if sliding to right
-				}
-				transAttr = {'x': (direction ? '' : '-') + marginPixels + 'px'}; 
+				modDims = _transition ? 
+							{dim:'left', attr:'x'} :
+							direction ? {dim:'left', attr:'left'} : {dim:'right', attr:'right'};
+				$img.height(docH + 'px').width(curImg.w * (docH/curImg.h) + 'px');			
+				marginPixels = $img.width() - docW;
+				$img.css(modDims.dim, '0px'); 
+				transAttr[modDims.attr] = '-' + marginPixels + 'px';
 			}
 			else {
+				modDims = _transition ? 
+							{dim:'top', attr:'y'} :
+							direction ? {dim:'top', attr:'top'} : {dim:'bottom', attr:'bottom'};
 				$img.width(docW+'px').height(curImg.h * (docW/curImg.w) + 'px');				
-				marginPixels = ($img.height() - docH);
-				if (direction){
-					$img.css({'top':'-' + marginPixels + 'px'}); // move image before slide if sliding down
-				}
-				transAttr = {'y' : (direction ? '' : '-') + marginPixels + 'px'}; // will be sliding to zero
+				marginPixels = $img.height() - docH;
+				$img.css(modDims.dim, '0px');
+				transAttr[modDims.attr] = '-' + marginPixels + 'px'; 
 			}
 
-			// if margin is too small, zoom in a little instead of panning
+			// if margin is too small, zoom a little instead of panning
 			// @TODO consider using percentage instead of pixel value (100)
 			if (_transition && marginPixels < 100){
-				if (direction){
+				if (direction){ // zoom out 
 					$img.css('scale','1.2');
 					transAttr = {'scale':'1'};
 				}
-				else {
+				else { // zoom in
 					transAttr = {'scale':'1.2'};
 				}
 			}
 
-			$.extend(transAttr, {
+			transProps = {
 				duration : Math.min(Math.max(marginPixels * 10, _cfg.aniSpeedMin), _cfg.aniSpeedMax),
 				easing   : _easing,
-				queue    : false
-			});
-
-			$img
-				.fadeIn(_cfg.fadeInSpeed, function(){
-					$img.css('z-index', -1);
-					_cfg.afterFadeIn(_imgs[_imgIndex]);
-				})
-				.transition(transAttr, function(){
+				queue    : false, 
+				complete : function(){
 					_cfg.beforeFadeOut(_imgs[_imgIndex]);
-					$(this).fadeOut(_cfg.fadeOutSpeed, function(){
-						$(this).remove();
+					$img.fadeOut(_cfg.fadeOutSpeed, function(){
+						$img.remove();
 					});
 					_loadImg();
-				}); 
+
+				}
+			};
+
+			$img.fadeIn(_cfg.fadeInSpeed, function(){
+					$img.css('z-index', -1);
+					_cfg.afterFadeIn(_imgs[_imgIndex]);
+				});
+
+			// use animate if css3 transitions aren't supported
+			_transition ? 
+				$img.transition($.extend(transAttr, transProps)) :
+				$img.animate(transAttr, transProps);
 		}	// end of _revealImg()
 
 		
@@ -130,8 +140,8 @@
 			$(img)
 				// assign handlers
 				.load(function(){
-					if (_cfg.blend==="into"){
-						$(this).css({"position":"absolute", "z-index":"-2"});
+					if (_cfg.blend==='into'){
+						$(this).css({'position':'absolute', 'z-index':'-2'});
 						$("#"+_cfg.containerId).append(this);
 					}
 					else {
@@ -155,7 +165,6 @@
 
 		// INITIALIZE
 		if (!$.support.transition) {
-        	$.fn.transition = $.fn.animate; // don't use css3 animations if not supported
         	_transition = false;
         	_easing = 'swing';
       	}
@@ -165,7 +174,7 @@
 			$(this).each(function(i, img){
 				$(img).hide();
 				_imgs.push({
-					src : $(img).attr("src"),
+					src : $(img).attr('src'),
 					w   : $(img).width(),
 					h   : $(img).height()
 				});
