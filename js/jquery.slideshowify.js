@@ -71,22 +71,20 @@
 
 			if (imgRatio > docRatio){
 				modDims = _transition ? 
-							{dim:'left', attr:'x'} :
-							direction ? {dim:'left', attr:'left'} : {dim:'right', attr:'right'};
+							direction ? {dim:'left', attr:'x', sign:'-'} : {dim:'right', attr:'x', sign:''} :
+							direction ? {dim:'left', attr:'left', sign:'-'} : {dim:'right', attr:'right', sign:'-'};
 				$img.height(docH + 'px').width(curImg.w * (docH/curImg.h) + 'px');			
 				marginPixels = $img.width() - docW;
-				$img.css(modDims.dim, '0px'); 
-				transAttr[modDims.attr] = '-' + marginPixels + 'px';
 			}
 			else {
 				modDims = _transition ? 
-							{dim:'top', attr:'y'} :
-							direction ? {dim:'top', attr:'top'} : {dim:'bottom', attr:'bottom'};
-				$img.width(docW+'px').height(curImg.h * (docW/curImg.w) + 'px');				
+							direction ? {dim:'top', attr:'y', sign:'-'} : {dim:'bottom', attr:'y', sign:''} :
+							direction ? {dim:'top', attr:'top', sign:'-'} : {dim:'bottom', attr:'bottom', sign:'-'};
+				$img.width(docW+'px').height(curImg.h * (docW/curImg.w) + 'px');
 				marginPixels = $img.height() - docH;
-				$img.css(modDims.dim, '0px');
-				transAttr[modDims.attr] = '-' + marginPixels + 'px'; 
 			}
+			$img.css(modDims.dim, '0');
+			transAttr[modDims.attr] = modDims.sign + marginPixels + 'px'; 
 
 			// if margin is too small, zoom a little instead of panning
 			// @TODO consider using percentage instead of pixel value (100)
