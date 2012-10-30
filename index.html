@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="en-US"> 
 <head>
-<meta charset="UTF-8" />
 <title>Slideshowify</title>
 <style type="text/css">
-	img   {display:none;} /* just 'cause */
+	body  {background-color: #000;}
+	img   {display:none;} /* hide, since we'll slideshowify them */
 </style>
+<script src="//code.jquery.com/jquery-1.8.2.min.js"></script>
+<script src="js/jquery.transit.js"></script>
+<script src="js/jquery.slideshowify.js"></script>
 </head>
 
-<body style="background-color:#000">
-
+<body>
 <!-- a bunch of random images -->
 <img src="http://farm7.staticflickr.com/6238/6362150571_5268f71c2f_b.jpg">
 <img src="http://img.gallerama.com/users/libbytish/27075_9.Roll2014.jpg"/> 	
@@ -34,16 +36,11 @@
 <img src="http://inapcache.boston.com/universal/site_graphics/blogs/bigpicture/oil_06_03/o05_23681817.jpg"/>
 <img src="http://img.gallerama.com/users/alekbiotic/55970_9.DSC_3203.jpg">
 
+<!-- target div -->
+<div id='target' style='position:relative; width:800px; height:500px; margin:100px auto;'></div>
 
-<!-- jquery -->
-<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
-<!-- transit plugin -->
-<script type="text/javascript" src="js/jquery.transit.min.js"></script>
-<!-- slideshowify plugin -->
-<script type="text/javascript" src="js/jquery.slideshowify.js"></script>
-
-<!-- slideshowify call -->
-<script type="text/javascript"> $("img").slideshowify(); </script>
-
+<script>
+	$("img").slideshowify({parentEl:'#target'}); 
+</script>
 </body>
 </html>
