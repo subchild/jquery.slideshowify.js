@@ -1,94 +1,101 @@
 /**
- * Slideshowify is a jQuery plugin for generating (window) edge-to-edge slideshows
- * from passed images, which could be passed selector, or json from an api endpoint. 
- * Images that don't fit the window proportions exactly (usually the case) are cropped 
- * and panned across the screen. Images which fit the screen exactly, are displayed fully
- * then slightly zoomed.
- *
- * Author: Aleksandar Kolundzija 
- * version 0.9
- *
- * Should appear on subchild.com, github, and jQuery plugins page at some point soon.
- * Will likely be used on Gallerama.com in some shape or form as well.
+ * Slideshowify is a super easy-to-use jQuery plugin for generating image slideshows 
+ * with a Ken Burns Effect, where images which don't fit the screen exactly 
+ * (generally the case) are cropped and either panned across the screen or 
+ * zoomed in a randomly determined direction.
  * 
- * @requires jquery
- * @requires jquery.transit (http://ricostacruz.com/jquery.transit/) as of v. 0.9
+ * Author: Aleksandar Kolundzija 
+ * version 0.9.3
  *
- * @TODO Consider adding option to pass image data directly to $.slideshowify()
- * @TODO Add header/subheader display, along with controls for pause and close. (likely on hover)
- * @TODO Add unit tests
+ * @requires jquery
+ * @requires jquery.transit (http://ricostacruz.com/jquery.transit/) as of version 0.9
  */
 
 (function($){
+
 	$.fn.slideshowify = function(/* config */){
 	
 		var _self         = this,
 			_imgs         = [],
 			_imgIndex     = -1,	
-			_imgIndexNext = 0, // for preloading next			
-			_transition   = true,
+			_imgIndexNext = 0,        // for preloading next			
+			_transition   = true,     // use CSS3 transitions (default might be changed during init)
 			_easing       = 'in-out',
+			_viewEl       = document, // filled by slideshow (used for determining dimensions)
+			_containerId  = "slideshowify-" + new Date().getTime(),
+			_containerCSS = {
+				"position" : "absolute",
+				"overflow" : "hidden",
+				"z-index"  : "-2",
+				"left"     : "0",
+				"top"      : "0",
+				"width"    : "100%",
+				"height"   : "100%"
+			},
 			_cfg = {
-				containerId   : "slideshowify-bg", // id of slideshowify div created by the plugin
-				containerCss  : {
-					"position" : "absolute",
-					"overflow" : "hidden",
-					"z-index"  : "-2",
-					"left"     : "0",
-					"top"      : "0",
-					"width"    : "100%",
-					"height"   : "100%"
-				},
-				blend         : "into", // "into" || "toBg"
+				parentEl      : "body",   // slideshow-container is injected into this
+				blend         : "into",   // "into" || "toBg"
+				randomize     : false,
 				fadeInSpeed   : 1500,
 				fadeOutSpeed  : 1500,
 				aniSpeedMin   : 9000, 
-				aniSpeedMax   : 15000,
-				afterFadeIn   : function(){},
-				beforeFadeOut : function(){}
-			};
-			
+				aniSpeedMax   : 15000
+			},
+			_$viewEl,
+			_$parentEl;
+		
+
 		if (arguments[0]){
 			$.extend(_cfg, arguments[0]); // reconfigure
+			if (_cfg.parentEl != "body") {
+				_viewEl = _cfg.parentEl;
+			}
 		}
-			
+
+		// local refs
+		_$viewEl   = $(_viewEl);
+		_$parentEl = $(_cfg.parentEl);
+
+
 		/**
-		 * Fills screen with image (most likely cropped based on its dimensions and window size).
-		 * @TODO Add a window resize handler (adjust photo dims/margins)
+		 * Fill viewEl with image (most likely cropped based on its dimensions and view size).
+		 * @TODO Add support for target divs whose dimensions were set with %s (get px value from parents).
+		 * @TODO Add a window resize handler (adjust photo dims/margins).
 		 */
 		function _revealImg(curImg){
-			var $doc      = $(document),
-				$img      = $(this),
-				docW      = $doc.width(),
-				docH      = $doc.height(),
-				direction = Math.round(Math.random()),
-				docRatio  = docW/docH,
-				imgRatio  = $img.width()/$img.height(),
-				transAttr = {},
+			var $img            = $(this),
+				viewW           = _$viewEl.width(),
+				viewH           = _$viewEl.height(),
+				viewRatio       = viewW/viewH,
+				imgRatio        = $img.width()/$img.height(),
+				marginThreshold = Math.floor(Math.max(viewW, viewH)/10), // for zoom transitions
+				direction       = Math.round(Math.random()),
+				transAttr       = {},
 				transProps,
 				marginPixels,
-				modDims;  // will hold values to set/animate
+				modDims; // will hold values to set and animate
 
-			if (imgRatio > docRatio){
+			if (imgRatio > viewRatio){
 				modDims = _transition ? 
-							direction ? {dim:'left', attr:'x', sign:'-'} : {dim:'right', attr:'x', sign:''} :
+							direction ? {dim:'left', attr:'x', sign:'-'} : {dim:'right', attr:'x', sign:''} 
+							:
 							direction ? {dim:'left', attr:'left', sign:'-'} : {dim:'right', attr:'right', sign:'-'};
-				$img.height(docH + 'px').width(curImg.w * (docH/curImg.h) + 'px');			
-				marginPixels = $img.width() - docW;
+				$img.height(viewH + 'px').width(curImg.w * (viewH/curImg.h) + 'px');			
+				marginPixels = $img.width() - viewW;
 			}
 			else {
 				modDims = _transition ? 
-							direction ? {dim:'top', attr:'y', sign:'-'} : {dim:'bottom', attr:'y', sign:''} :
+							direction ? {dim:'top', attr:'y', sign:'-'} : {dim:'bottom', attr:'y', sign:''} 
+							:
 							direction ? {dim:'top', attr:'top', sign:'-'} : {dim:'bottom', attr:'bottom', sign:'-'};
-				$img.width(docW+'px').height(curImg.h * (docW/curImg.w) + 'px');
-				marginPixels = $img.height() - docH;
+				$img.width(viewW+'px').height(curImg.h * (viewW/curImg.w) + 'px');
+				marginPixels = $img.height() - viewH;
 			}
 			$img.css(modDims.dim, '0');
 			transAttr[modDims.attr] = modDims.sign + marginPixels + 'px'; 
 
-			// if margin is too small, zoom a little instead of panning
-			// @TODO consider using percentage instead of pixel value (100)
-			if (_transition && marginPixels < 100){
+			// if marginThreshold is small, zoom a little instead of panning
+			if (_transition && marginPixels < marginThreshold){
 				if (direction){ // zoom out 
 					$img.css('scale','1.2');
 					transAttr = {'scale':'1'};
@@ -103,18 +110,20 @@
 				easing   : _easing,
 				queue    : false, 
 				complete : function(){
-					_cfg.beforeFadeOut(_imgs[_imgIndex]);
+					_$parentEl.trigger('beforeFadeOut', _imgs[_imgIndex])
 					$img.fadeOut(_cfg.fadeOutSpeed, function(){
+						_$parentEl.trigger('afterFadeOut', _imgs[_imgIndex]);
 						$img.remove();
 					});
 					_loadImg();
 
 				}
 			};
-
+			
+			_$parentEl.trigger('beforeFadeIn', _imgs[_imgIndex]);
 			$img.fadeIn(_cfg.fadeInSpeed, function(){
 					$img.css('z-index', -1);
-					_cfg.afterFadeIn(_imgs[_imgIndex]);
+					_$parentEl.trigger('afterFadeIn', _imgs[_imgIndex])
 				});
 
 			// use animate if css3 transitions aren't supported
@@ -126,7 +135,6 @@
 		
 		/**
 		 * Loads image and starts display flow
-		 * @TODO fix preloading stuff; only preload images once (don't loop)
 		 */
 		function _loadImg(){
 			var img     = new Image(),
@@ -140,10 +148,10 @@
 				.load(function(){
 					if (_cfg.blend==='into'){
 						$(this).css({'position':'absolute', 'z-index':'-2'});
-						$("#"+_cfg.containerId).append(this);
+						$('#'+_containerId).append(this);
 					}
-					else {
-						$("#"+_cfg.containerId).empty().append(this);
+					else { // @TODO verify that this works
+						$('#'+_containerId).empty().append(this);
 					}
 					_revealImg.call(this, _imgs[_imgIndex]);
 				})
@@ -152,7 +160,9 @@
 				})
 				.hide()
 				.attr("src", _imgs[_imgIndex].src); // load
-			
+		
+			if (_imgIndexNext == len) return; // nothing left to preload
+
 			// preload next image
 			_imgIndexNext = _imgIndex + 1;
 			if (_imgIndexNext < len-1){
@@ -167,7 +177,8 @@
         	_easing = 'swing';
       	}
 
-    	if (!_cfg.imgs){ // if images weren't passed as array, load from object
+
+    	if (!_cfg.imgs){ // images were passed as selector 
 			// load images into private array
 			$(this).each(function(i, img){
 				$(img).hide();
@@ -182,51 +193,51 @@
 			_imgs = _cfg.imgs;
 		}
 	
+		
+		if (_cfg.randomize){ 
+			_imgs.sort(function(){ return 0.5 - Math.random(); });
+		}
+
+
 		// create container div 
-		$("<div id='"+_cfg.containerId+"'></div>")
-			.css(_cfg.containerCss)
-			.appendTo("body");
-	
+		$("<div id='"+_containerId+"'></div>")
+			.css(_containerCSS)
+			.appendTo(_cfg.parentEl);
+
+
 		// start
 		_loadImg();
 		
 		return this;
 	};
-		
+
+	/**
+	 * Expose slideshowify() to jQuery for use without DOM selector.
+	 */ 
+	$.slideshowify = function(cfg){
+		var _self = this,
+			_cfg  = {
+				dataUrl  : "",
+				dataType : "json",
+				async    : true,
+				filterFn : function(data){ return data; } // default filter. does nothing
+			};
+				
+		$.extend(_cfg, cfg);
+	
+		$.ajax({
+			url      : _cfg.dataUrl,
+			dataType : _cfg.dataType,
+			async    : _cfg.async,
+			success  : function(imgs){
+				_cfg.imgs = _cfg.filterFn(imgs);			
+				$({}).slideshowify(_cfg);
+			}
+		});
+	};
+
 }(jQuery));
 
 
 
-/**
- * Expose slideshowify() to jQuery for use without DOM selector.
- * @TODO add support for image array as a parameter (no need for ajax)
- */ 
-$.slideshowify = function(cfg){
-	
-	var _self = this,
-		_cfg  = {
-			randomize : false,
-			dataUrl   : "",
-			dataType  : "json",
-			async     : true,
-			filterFn  : function(data){ return data; } // default filter. does nothing
-		};
-			
-	$.extend(_cfg, cfg);
 
-	$.ajax({
-		url      : _cfg.dataUrl,
-		dataType : _cfg.dataType,
-		async    : _cfg.async,
-		success  : function(imgs){
-			_cfg.imgs = _cfg.filterFn(imgs);			
-			if (_cfg.randomize){ 
-				_cfg.imgs.sort(function(){
-					return 0.5 - Math.random();
-				});
-			}
-			$({}).slideshowify(_cfg);
-		}
-	});
-	
-};
