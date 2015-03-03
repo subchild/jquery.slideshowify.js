@@ -64,7 +64,8 @@
 				aniSpeedMin   : 9000, 
 				aniSpeedMax   : 15000,
                 minZoomLevel  : 1,
-                maxZoomLevel  : 1.2
+                maxZoomLevel  : 1.2,
+                alwaysZoom    : false
 			},
 			_$viewEl,
 			_$parentEl;
@@ -120,7 +121,7 @@
 			transAttr[modDims.attr] = modDims.sign + marginPixels + 'px'; 
 
 			// if marginThreshold is small, zoom a little instead of panning
-			if (_transition && marginPixels < marginThreshold){
+            if (_cfg.alwaysZoom || (_transition && marginPixels < marginThreshold)){
 				if (direction){ // zoom out 
 					$img.css('scale',_cfg.maxZoomLevel);
 					transAttr = {'scale':_cfg.minZoomLevel};
