@@ -62,7 +62,9 @@
 				fadeInSpeed   : 1500,
 				fadeOutSpeed  : 1500,
 				aniSpeedMin   : 9000, 
-				aniSpeedMax   : 15000
+				aniSpeedMax   : 15000,
+                minZoomLevel  : 1,
+                maxZoomLevel  : 1.2
 			},
 			_$viewEl,
 			_$parentEl;
@@ -120,11 +122,11 @@
 			// if marginThreshold is small, zoom a little instead of panning
 			if (_transition && marginPixels < marginThreshold){
 				if (direction){ // zoom out 
-					$img.css('scale','1.2');
-					transAttr = {'scale':'1'};
+					$img.css('scale',_cfg.maxZoomLevel);
+					transAttr = {'scale':_cfg.minZoomLevel};
 				}
 				else { // zoom in
-					transAttr = {'scale':'1.2'};
+					transAttr = {'scale':_cfg.maxZoomLevel};
 				}
 			}
 
