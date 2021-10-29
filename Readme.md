@@ -4,7 +4,7 @@ jQuery.slideshowify.js is a jQuery plugin for generating a slideshow with a [Ken
 images that match a selector.  Images that don't fit the window proportions exactly (generally the case) are cropped and panned across the screen. 
 This also resembles that Mac screensaver.
 
-[Check out the DEMO](http://www.subchild.com/slideshowify)
+[Check out the DEMO](http://www.slideshowify.com)
 
 As of version 0.9, jQuery.slideshowify supports hardware-accelerated CSS3 transforms, which include panning in all directions as well as zooming 
 in and out (when the image aspect ratio matches that of the window). CSS3 support is provided by the excellent [jQuery.transit](http://ricostacruz.com/jquery.transit/) 
