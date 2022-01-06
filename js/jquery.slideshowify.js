@@ -165,10 +165,10 @@
 				len     = _imgs.length;
 
 			_imgIndex = (_imgIndex < len-1) ? _imgIndex+1 : 0;
-		
+
 			$(img)
 				// assign handlers
-				.load(function(){
+				.on('load', function(){
 					if (_cfg.blend==='into'){
 						$(this).css({'position':'absolute', 'z-index':'-2'});
 						$('#'+_containerId).append(this);
@@ -178,7 +178,7 @@
 					}
 					_revealImg.call(this, _imgs[_imgIndex]);
 				})
-				.error(function(){
+				.on('error', function(){
 					throw new Error("Oops, can't load the image.");
 				})
 				.hide()
